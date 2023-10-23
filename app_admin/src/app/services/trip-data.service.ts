@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import { Trip } from '../models/trip';
+import { User } from '../models/user';
+import { AuthResponse } from '../models/authresponse';
+import { BROWSER_STORAGE } from '../storage';
+
 
 @Injectable()
 export class TripDataService {
@@ -8,7 +12,8 @@ export class TripDataService {
     private apiBaseUrl = 'http://localhost:3000/api/';
     private tripUrl = '${this.apiBaseUrl}trips/';
 
-    constructor(private http: Http) {}
+    constructor(private http: Http, 
+        @Inject(BROWSER_STORAGE) private storage: Storage) {}
 
     public getTrip(tripCode: string): Promise<Trip> {
         console.log(`Inside TripDataService#getTrip(${tripCode})`);
@@ -37,6 +42,25 @@ export class TripDataService {
             .then(response => response.json() as Trip[])
             .catch(this.handleError);
     }
+
+    public login(user: User): Promise<AuthResponse> {
+        return this.makeAuthApiCall('login', user);
+    }
+
+    public register(user: User): Promise<AuthResponse> {
+        return this.makeAuthApiCall('register', user);
+    }
+    
+    private makeAuthApiCall(urlPath: string, user: User):
+        Promise<AuthResponse> {
+        const url: string = `${this.apiBaseUrl}/${urlPath}`;
+        return this.http
+            .post(url, user)
+            .toPromise()
+            .then(response => response.json() as AuthResponse)
+            .catch(this.handleError);
+    }
+        
     
     private handleError(error: any): Promise<any> {
         console.error('Something has gone wrong', error); 
